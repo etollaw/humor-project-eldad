@@ -1,4 +1,6 @@
-import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import VoteButtons from "./VoteButtons";
+import Link from "next/link";
 
 type CaptionRow = {
   id: string;
@@ -9,7 +11,15 @@ type CaptionRow = {
   like_count: number | null;
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
+  const supabase = await createSupabaseServerClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from("captions")
     .select("id, content, created_datetime_utc, image_id, is_public, like_count")
@@ -29,9 +39,23 @@ export default async function Home() {
 
   return (
     <main className="p-10">
-      <h1 className="text-3xl font-bold mb-2">Captions</h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-3xl font-bold">Captions</h1>
+        {user ? (
+          <span className="text-sm opacity-70">
+            Signed in as {user.email} ·{" "}
+            <Link href="/protected" className="underline">
+              Dashboard
+            </Link>
+          </span>
+        ) : (
+          <Link href="/login" className="border rounded px-3 py-1 text-sm hover:opacity-80">
+            Sign in to vote
+          </Link>
+        )}
+      </div>
       <p className="text-sm opacity-70 mb-6">
-        Showing {captions.length} rows from Supabase
+        Showing {captions.length} captions · {user ? "Vote below!" : "Sign in to vote"}
       </p>
 
       <ul className="space-y-3">
@@ -45,6 +69,8 @@ export default async function Home() {
               <span>Public: {String(c.is_public)}</span>
               <span>Likes: {c.like_count ?? "—"}</span>
             </div>
+
+            <VoteButtons captionId={c.id} loggedIn={!!user} />
           </li>
         ))}
       </ul>
