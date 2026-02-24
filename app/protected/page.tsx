@@ -22,7 +22,7 @@ export default async function ProtectedPage() {
         </div>
         <div className="border rounded-xl p-5">
           <h2 className="text-sm font-medium opacity-50 mb-1">User ID</h2>
-          <p className="font-mono text-sm">{data.user.id.slice(0, 16)}...</p>
+          <p className="font-mono text-sm break-all">{data.user.id}</p>
         </div>
       </div>
 
