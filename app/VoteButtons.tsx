@@ -10,34 +10,43 @@ export default function VoteButtons({
   captionId: string;
   loggedIn: boolean;
 }) {
-  const [status, setStatus] = useState<string | null>(null);
+  const [voted, setVoted] = useState<1 | -1 | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleVote = async (value: 1 | -1) => {
     if (!loggedIn) {
-      setStatus("Log in to vote");
+      setError("Sign in to vote");
       return;
     }
 
     setLoading(true);
-    setStatus(null);
+    setError(null);
 
     const result = await submitVote(captionId, value);
 
     if (result.error) {
-      setStatus(result.error);
+      setError(result.error);
     } else {
-      setStatus(value === 1 ? "Upvoted!" : "Downvoted!");
+      setVoted(value);
     }
     setLoading(false);
   };
 
+  if (voted) {
+    return (
+      <span className="text-xs font-medium px-2 py-1 rounded-full bg-foreground/5">
+        {voted === 1 ? "👍 Upvoted" : "👎 Downvoted"}
+      </span>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-2 mt-2">
+    <div className="flex items-center gap-1.5">
       <button
         onClick={() => handleVote(1)}
         disabled={loading}
-        className="border rounded px-3 py-1 text-sm hover:bg-green-100 disabled:opacity-50"
+        className="rounded-full px-2.5 py-1 text-sm border hover:bg-green-500/10 hover:border-green-500/40 disabled:opacity-40 transition-colors"
         title="Upvote"
       >
         👍
@@ -45,12 +54,12 @@ export default function VoteButtons({
       <button
         onClick={() => handleVote(-1)}
         disabled={loading}
-        className="border rounded px-3 py-1 text-sm hover:bg-red-100 disabled:opacity-50"
+        className="rounded-full px-2.5 py-1 text-sm border hover:bg-red-500/10 hover:border-red-500/40 disabled:opacity-40 transition-colors"
         title="Downvote"
       >
         👎
       </button>
-      {status && <span className="text-xs opacity-70">{status}</span>}
+      {error && <span className="text-xs text-red-500">{error}</span>}
     </div>
   );
 }

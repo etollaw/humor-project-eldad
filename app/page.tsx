@@ -1,6 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import VoteButtons from "./VoteButtons";
-import Link from "next/link";
 
 type CaptionRow = {
   id: string;
@@ -28,7 +27,7 @@ export default async function Home() {
 
   if (error) {
     return (
-      <main className="p-10">
+      <main className="p-8">
         <h1 className="text-3xl font-bold mb-4">Captions</h1>
         <p className="text-red-500">Error: {error.message}</p>
       </main>
@@ -38,42 +37,38 @@ export default async function Home() {
   const captions = (data ?? []) as CaptionRow[];
 
   return (
-    <main className="p-10">
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-3xl font-bold">Captions</h1>
-        {user ? (
-          <span className="text-sm opacity-70">
-            Signed in as {user.email} ·{" "}
-            <Link href="/upload" className="underline">
-              Upload Image
-            </Link>{" · "}
-            <Link href="/protected" className="underline">
-              Dashboard
-            </Link>
-          </span>
-        ) : (
-          <Link href="/login" className="border rounded px-3 py-1 text-sm hover:opacity-80">
-            Sign in to vote
-          </Link>
-        )}
+    <main className="p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-1">Latest Captions</h1>
+        <p className="text-sm opacity-60">
+          {captions.length} captions ·{" "}
+          {user ? "Vote on your favorites!" : "Sign in to vote on captions"}
+        </p>
       </div>
-      <p className="text-sm opacity-70 mb-6">
-        Showing {captions.length} captions · {user ? "Vote below!" : "Sign in to vote"}
-      </p>
 
-      <ul className="space-y-3">
+      <ul className="space-y-4">
         {captions.map((c) => (
-          <li key={c.id} className="border rounded-lg p-4">
-            <p className="text-lg">{c.content ?? "(no content)"}</p>
+          <li
+            key={c.id}
+            className="border rounded-xl p-5 hover:border-foreground/30 transition-colors"
+          >
+            <p className="text-lg leading-relaxed">
+              {c.content ?? <span className="italic opacity-50">(no content)</span>}
+            </p>
 
-            <div className="mt-3 text-xs opacity-70 flex flex-wrap gap-x-4 gap-y-1">
-              <span>ID: {c.id.slice(0, 8)}…</span>
-              <span>Image: {c.image_id ? c.image_id.slice(0, 8) + "…" : "—"}</span>
-              <span>Public: {String(c.is_public)}</span>
-              <span>Likes: {c.like_count ?? "—"}</span>
+            <div className="mt-3 flex items-center justify-between">
+              <div className="text-xs opacity-50 flex flex-wrap gap-x-3 gap-y-1">
+                <span>
+                  {new Date(c.created_datetime_utc).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+                {c.like_count != null && <span>{c.like_count} likes</span>}
+              </div>
+              <VoteButtons captionId={c.id} loggedIn={!!user} />
             </div>
-
-            <VoteButtons captionId={c.id} loggedIn={!!user} />
           </li>
         ))}
       </ul>
