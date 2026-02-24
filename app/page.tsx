@@ -44,6 +44,9 @@ export default async function Home() {
         {user ? (
           <span className="text-sm opacity-70">
             Signed in as {user.email} ·{" "}
+            <Link href="/upload" className="underline">
+              Upload Image
+            </Link>{" · "}
             <Link href="/protected" className="underline">
               Dashboard
             </Link>
