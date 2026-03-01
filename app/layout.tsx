@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Almost Crackd — Caption & Vote",
+  title: "Almost Crackd - Caption & Vote",
   description: "Upload images, generate AI captions, and vote on the funniest ones.",
 };
 
@@ -29,9 +29,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Navbar />
-        <div className="max-w-4xl mx-auto">
-          {children}
-        </div>
+        <div className="max-w-4xl mx-auto">{children}</div>
       </body>
     </html>
   );

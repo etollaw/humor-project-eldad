@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import SignOutButton from "./SignOutButton";
 
 export default async function ProtectedPage() {
   const supabase = await createSupabaseServerClient();
@@ -40,6 +41,7 @@ export default async function ProtectedPage() {
           Browse Captions
         </Link>
       </div>
+      <SignOutButton />
     </main>
   );
 }

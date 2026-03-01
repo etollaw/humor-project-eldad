@@ -36,7 +36,7 @@ export default function VoteButtons({
   if (voted) {
     return (
       <span className="text-xs font-medium px-2 py-1 rounded-full bg-foreground/5">
-        {voted === 1 ? "👍 Upvoted" : "👎 Downvoted"}
+        {voted === 1 ? "Upvoted" : "Downvoted"}
       </span>
     );
   }
@@ -49,7 +49,7 @@ export default function VoteButtons({
         className="rounded-full px-2.5 py-1 text-sm border hover:bg-green-500/10 hover:border-green-500/40 disabled:opacity-40 transition-colors"
         title="Upvote"
       >
-        👍
+        Up
       </button>
       <button
         onClick={() => handleVote(-1)}
@@ -57,7 +57,7 @@ export default function VoteButtons({
         className="rounded-full px-2.5 py-1 text-sm border hover:bg-red-500/10 hover:border-red-500/40 disabled:opacity-40 transition-colors"
         title="Downvote"
       >
-        👎
+        Down
       </button>
       {error && <span className="text-xs text-red-500">{error}</span>}
     </div>

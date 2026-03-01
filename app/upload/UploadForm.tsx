@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { uploadAndGenerateCaptions } from "./actions";
+import Image from "next/image";
 
 type CaptionResult = {
   id: string;
@@ -63,7 +64,7 @@ export default function UploadForm() {
       {/* File picker area */}
       <div
         onClick={() => fileRef.current?.click()}
-        className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-foreground/40 transition-colors mb-4"
+        className="border-2 border-dashed border-foreground/30 bg-background/80 rounded-xl p-8 text-center cursor-pointer hover:border-foreground/50 hover:bg-foreground/[0.03] transition-colors mb-4"
       >
         <input
           ref={fileRef}
@@ -74,12 +75,15 @@ export default function UploadForm() {
         />
         {preview ? (
           <div className="flex flex-col items-center gap-3">
-            <img
+            <Image
               src={preview}
               alt="Preview"
-              className="max-w-xs max-h-48 rounded-lg"
+              width={320}
+              height={192}
+              unoptimized
+              className="max-w-xs max-h-48 rounded-lg object-contain"
             />
-            <p className="text-sm opacity-60">{fileName} · Click to change</p>
+            <p className="text-sm opacity-60">{fileName} - Click to change</p>
           </div>
         ) : (
           <div>
@@ -111,12 +115,14 @@ export default function UploadForm() {
       )}
 
       {imageUrl && (
-        <div className="mt-6 border rounded-xl p-4">
+        <div className="mt-6 border border-foreground/20 bg-background/80 rounded-xl p-4">
           <p className="text-sm font-medium mb-2">Uploaded image</p>
-          <img
+          <Image
             src={imageUrl}
             alt="Uploaded"
-            className="max-w-sm max-h-64 rounded-lg"
+            width={640}
+            height={384}
+            className="max-w-sm max-h-64 rounded-lg object-cover"
           />
         </div>
       )}
@@ -130,7 +136,7 @@ export default function UploadForm() {
             {captions.map((c, i) => (
               <li
                 key={c.id ?? i}
-                className="border rounded-xl p-4 hover:border-foreground/30 transition-colors"
+                className="border border-foreground/15 bg-background/80 rounded-xl p-4 hover:border-foreground/35 transition-colors"
               >
                 <p>{c.content ?? JSON.stringify(c)}</p>
               </li>
