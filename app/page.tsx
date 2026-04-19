@@ -9,7 +9,6 @@ type CaptionRow = {
   created_datetime_utc: string;
   image_id: string | null;
   is_public: boolean;
-  like_count: number | null;
 };
 
 type ImageRow = {
@@ -28,7 +27,7 @@ export default async function Home() {
 
   const { data, error } = await supabase
     .from("captions")
-    .select("id, content, created_datetime_utc, image_id, is_public, like_count")
+    .select("id, content, created_datetime_utc, image_id, is_public")
     .order("created_datetime_utc", { ascending: false })
     .limit(15);
 
@@ -51,6 +50,7 @@ export default async function Home() {
   );
 
   const imageUrlById = new Map<string, string>();
+  const voteScoreByCaptionId = new Map<string, number>();
   if (imageIds.length > 0) {
     const { data: images } = await supabase
       .from("images")
@@ -61,6 +61,19 @@ export default async function Home() {
       if (image.url) {
         imageUrlById.set(image.id, image.url);
       }
+    });
+  }
+
+  const captionIds = captions.map((caption) => caption.id);
+  if (captionIds.length > 0) {
+    const { data: votes } = await supabase
+      .from("caption_votes")
+      .select("caption_id, vote_value")
+      .in("caption_id", captionIds);
+
+    (votes ?? []).forEach((vote) => {
+      const current = voteScoreByCaptionId.get(vote.caption_id) ?? 0;
+      voteScoreByCaptionId.set(vote.caption_id, current + (vote.vote_value ?? 0));
     });
   }
 
@@ -114,6 +127,24 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="mb-8 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-foreground/15 bg-background/70 p-4">
+          <p className="text-xs uppercase tracking-wide opacity-55">Step 1</p>
+          <p className="mt-1 text-sm font-medium">Browse recent captions</p>
+          <p className="mt-1 text-xs opacity-65">Start with the latest image-caption pairs below.</p>
+        </div>
+        <div className="rounded-xl border border-foreground/15 bg-background/70 p-4">
+          <p className="text-xs uppercase tracking-wide opacity-55">Step 2</p>
+          <p className="mt-1 text-sm font-medium">Vote on favorites</p>
+          <p className="mt-1 text-xs opacity-65">Use Up/Down to rank humor quality. You can update your vote later.</p>
+        </div>
+        <div className="rounded-xl border border-foreground/15 bg-background/70 p-4">
+          <p className="text-xs uppercase tracking-wide opacity-55">Step 3</p>
+          <p className="mt-1 text-sm font-medium">Upload your own image</p>
+          <p className="mt-1 text-xs opacity-65">Sign in to generate and share fresh captions.</p>
+        </div>
+      </section>
+
       <section>
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-1">Latest Captions</h2>
@@ -127,7 +158,7 @@ export default async function Home() {
           {captionsWithImages.map((c) => (
             <li
               key={c.id}
-              className="border border-foreground/15 bg-background/70 rounded-xl p-5 hover:border-foreground/35 transition-colors"
+              className="border border-foreground/15 bg-background/80 rounded-xl p-5 shadow-sm hover:border-foreground/35 hover:shadow-md transition-all"
             >
               <Image
                 src={imageUrlById.get(c.image_id!)!}
@@ -149,7 +180,7 @@ export default async function Home() {
                       year: "numeric",
                     })}
                   </span>
-                  {c.like_count != null && <span>{c.like_count} likes</span>}
+                  <span>{voteScoreByCaptionId.get(c.id) ?? 0} vote score</span>
                 </div>
                 <VoteButtons captionId={c.id} loggedIn={!!user} />
               </div>
