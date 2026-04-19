@@ -7,12 +7,15 @@ import { useRouter } from "next/navigation";
 export default function VoteButtons({
   captionId,
   loggedIn,
+  initialScore,
 }: {
   captionId: string;
   loggedIn: boolean;
+  initialScore: number;
 }) {
   const router = useRouter();
   const [voted, setVoted] = useState<1 | -1 | null>(null);
+  const [score, setScore] = useState(initialScore);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -32,6 +35,8 @@ export default function VoteButtons({
     if (result.error) {
       setError(result.error);
     } else {
+      const delta = voted === null ? value : value - voted;
+      setScore((prev) => prev + delta);
       setVoted(value);
       setFeedback(result.updated ? "Vote updated" : "Vote saved");
       router.refresh();
@@ -70,6 +75,7 @@ export default function VoteButtons({
       </div>
 
       {error ? <span className="text-xs text-red-500">{error}</span> : null}
+      <span className="text-[11px] opacity-65">Score: {score}</span>
       <span className="text-[11px] opacity-60">You can change your vote any time.</span>
     </div>
   );

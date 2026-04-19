@@ -180,9 +180,12 @@ export default async function Home() {
                       year: "numeric",
                     })}
                   </span>
-                  <span>{voteScoreByCaptionId.get(c.id) ?? 0} vote score</span>
                 </div>
-                <VoteButtons captionId={c.id} loggedIn={!!user} />
+                <VoteButtons
+                  captionId={c.id}
+                  loggedIn={!!user}
+                  initialScore={voteScoreByCaptionId.get(c.id) ?? 0}
+                />
               </div>
             </li>
           ))}

@@ -45,6 +45,7 @@ export async function submitVote(captionId: string, voteValue: 1 | -1) {
       .from("caption_votes")
       .update({
         vote_value: voteValue,
+        modified_datetime_utc: new Date().toISOString(),
         modified_by_user_id: profileId,
       })
       .eq("id", existingVote.id);
@@ -54,6 +55,8 @@ export async function submitVote(captionId: string, voteValue: 1 | -1) {
       caption_id: captionId,
       profile_id: profileId,
       vote_value: voteValue,
+      created_datetime_utc: new Date().toISOString(),
+      modified_datetime_utc: new Date().toISOString(),
       created_by_user_id: profileId,
       modified_by_user_id: profileId,
     });
