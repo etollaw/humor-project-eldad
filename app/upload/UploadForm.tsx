@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { uploadAndGenerateCaptions } from "./actions";
-import Image from "next/image";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type CaptionResult = {
   id: string;
@@ -11,6 +10,7 @@ type CaptionResult = {
 };
 
 export default function UploadForm() {
+  const supabase = createSupabaseBrowserClient();
   const [preview, setPreview] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -43,16 +43,95 @@ export default function UploadForm() {
     setCaptions([]);
     setStep("Uploading image and generating captions...");
 
-    const formData = new FormData();
-    formData.append("image", file);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    const result = await uploadAndGenerateCaptions(formData);
+      const token = session?.access_token;
+      if (!token) {
+        throw new Error("You must be logged in.");
+      }
 
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setCaptions(result.captions ?? []);
-      setImageUrl(result.imageUrl ?? null);
+      const contentType = file.type;
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "image/heic",
+      ];
+
+      if (!allowedTypes.includes(contentType)) {
+        throw new Error(`Unsupported image type: ${contentType}`);
+      }
+
+      const apiBase = "https://api.almostcrackd.ai";
+
+      const step1Res = await fetch(`${apiBase}/pipeline/generate-presigned-url`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ contentType }),
+      });
+
+      if (!step1Res.ok) {
+        throw new Error(`Step 1 failed (${step1Res.status}): ${await step1Res.text()}`);
+      }
+
+      const { presignedUrl, cdnUrl } = await step1Res.json();
+
+      const step2FormData = new FormData();
+      step2FormData.append("presignedUrl", presignedUrl);
+      step2FormData.append("contentType", contentType);
+      step2FormData.append("file", file);
+
+      const step2Res = await fetch("/api/upload-to-presigned", {
+        method: "POST",
+        body: step2FormData,
+      });
+
+      if (!step2Res.ok) {
+        throw new Error(`Step 2 upload failed (${step2Res.status}): ${await step2Res.text()}`);
+      }
+
+      const step3Res = await fetch(`${apiBase}/pipeline/upload-image-from-url`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageUrl: cdnUrl, isCommonUse: false }),
+      });
+
+      if (!step3Res.ok) {
+        throw new Error(`Step 3 register failed (${step3Res.status}): ${await step3Res.text()}`);
+      }
+
+      const { imageId } = await step3Res.json();
+
+      const step4Res = await fetch(`${apiBase}/pipeline/generate-captions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageId }),
+      });
+
+      if (!step4Res.ok) {
+        throw new Error(`Step 4 caption generation failed (${step4Res.status}): ${await step4Res.text()}`);
+      }
+
+      const result = await step4Res.json();
+
+      setCaptions(result ?? []);
+      setImageUrl(cdnUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected upload failure");
     }
 
     setStep(null);
@@ -75,12 +154,9 @@ export default function UploadForm() {
         />
         {preview ? (
           <div className="flex flex-col items-center gap-3">
-            <Image
+            <img
               src={preview}
               alt="Preview"
-              width={320}
-              height={192}
-              unoptimized
               className="max-w-xs max-h-48 rounded-lg object-contain"
             />
             <p className="text-sm opacity-60">{fileName} - Click to change</p>
@@ -117,11 +193,9 @@ export default function UploadForm() {
       {imageUrl && (
         <div className="mt-6 border border-foreground/20 bg-background/80 rounded-xl p-4">
           <p className="text-sm font-medium mb-2">Uploaded image</p>
-          <Image
+          <img
             src={imageUrl}
             alt="Uploaded"
-            width={640}
-            height={384}
             className="max-w-sm max-h-64 rounded-lg object-cover"
           />
         </div>

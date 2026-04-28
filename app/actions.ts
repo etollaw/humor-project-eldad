@@ -46,7 +46,6 @@ export async function submitVote(captionId: string, voteValue: 1 | -1) {
       .update({
         vote_value: voteValue,
         modified_datetime_utc: new Date().toISOString(),
-        modified_by_user_id: profileId,
       })
       .eq("id", existingVote.id);
     mutationError = error;
@@ -57,8 +56,6 @@ export async function submitVote(captionId: string, voteValue: 1 | -1) {
       vote_value: voteValue,
       created_datetime_utc: new Date().toISOString(),
       modified_datetime_utc: new Date().toISOString(),
-      created_by_user_id: profileId,
-      modified_by_user_id: profileId,
     });
     mutationError = error;
   }
